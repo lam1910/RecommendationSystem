@@ -252,15 +252,15 @@ processed_data = pca.fit_transform(processed_data)
 #       output the array contain 5 nearest movieId.
 # already have rows_of_array with each element is the movieId and vector of the movie
 
+message = 'Main Part of the program. Extremely compute-intensive. Can be reduce to a 5000 * 5000 size array. Note to ' \
+          'change items list and items_not_tagged list'
+warnings.warn(message, stacklevel = 1)
 
 length_of_vector = np.linalg.norm(x = processed_data, axis = 1)
 
 del all_items
 gc.collect()
 
-message = 'Main Part of the program. Extremely compute-intensive. Can be reduce to a 5000 * 5000 size array. Note to ' \
-          'change items list and items_not_tagged list'
-warnings.warn(message, stacklevel = 1)
 matrix_of_cos = np.ones(shape = (10381, 10381), dtype = float)
 
 for i in range(10381):
@@ -324,3 +324,9 @@ def getMovieInfor(id):
         return result
     else:
         raise ValueError('Item is not on the database')
+
+listOfMovie = recommend(5)
+print('Movie: ' + getMovieInfor(5))
+print('You might also like to watch:')
+for id in range(len(listOfMovie)):
+    print('\t{}. '.format(id + 1) + getMovieInfor(listOfMovie[id]))
