@@ -1,5 +1,7 @@
+import numpy as np
+from math import pow
+from math import pi
 def cos(vecA, vecB):
-    import numpy as np
     if isinstance(vecA, list) and isinstance(vecB, list):
         if len(vecA) != len(vecB):
             errorMes = 'Two vectors are in different dimension. ' \
@@ -22,5 +24,19 @@ def cos(vecA, vecB):
         raise TypeError('Both vectors has to be represented as a list of coordinates.')
 
 def sin(vecA, vecB):
-    from math import pow
     return pow(1 - pow(cos(vecA, vecB), 2), 0.5)
+
+def tan(vecA, vecB):
+    return pow(1 - pow(cos(vecA, vecB), -2), 0.5)
+
+def cot(vecA, vecB):
+    return pow(tan(vecA, vecB), -1)
+
+def toRadian(angle):
+    assert isinstance(angle, int) or isinstance(angle, float), 'angle has to be a real number (of float or int type)'
+    return [(angle / 180) * pi, angle / 180]
+
+def toDegree(angle):
+    assert isinstance(angle, int) or isinstance(angle, float), 'angle has to be a real number (of float or int type)'
+    return (angle/ pi) * 180
+

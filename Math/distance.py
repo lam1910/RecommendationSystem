@@ -1,5 +1,5 @@
+from math import pow
 def eucledianDistance(pointA, pointB):
-    from math import pow
     if isinstance(pointA, list) and isinstance(pointB, list):
         if len(pointA) != len(pointB):
             errorMes = 'Two points are in different dimension. ' \
