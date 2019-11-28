@@ -169,11 +169,12 @@ import pandas as pd
 import numpy as np
 import gc
 import warnings
+import time
 
 print("Due to the fact that there are more movies in the itemDataset than in tagScoreDataset (itemDataset.shape[0] > "
       "len(tagScoreDataset.movieId.unique().tolist), or simply put there are some movies in the database that have not "
       "been given a tag yet, we will need a list of Id of all movies that had not had a tag yet to build the predict "
-      "(recommend) function.")
+      "(recommend) function thus importing movie.csv")
 itemDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/movies.csv', sep = ',')
 # exercise/recommendationSystem/ml-20m/movies.csv
 
@@ -211,7 +212,7 @@ except ValueError:
     del col_name[0]
     output = pd.DataFrame(data = processed_data, columns = col_name)
 
-output.to_csv(path_or_buf = 'ml-20m/processed_genome_score.csv', index = False)
+# output.to_csv(path_or_buf = 'ml-20m/processed_genome_score.csv', index = False)
 # exercise/recommendationSystem/ml-20m/processed_genome_score.csv
 
 # filter to get the matrix of genome score average
@@ -256,18 +257,31 @@ message = 'Main Part of the program. Extremely compute-intensive. Can be reduce 
           'change items list and items_not_tagged list'
 warnings.warn(message, stacklevel = 1)
 
-length_of_vector = np.linalg.norm(x = processed_data, axis = 1)
+message = 'Using cosine as a metrics. If the dataset has a small number of features, you might want to use euclidean ' \
+          'distance instead'
+warnings.warn(message, stacklevel = 1)
+
+# time1 = time.time()
+# length_of_vector = np.linalg.norm(x = processed_data, axis = 1)
 
 del all_items
 gc.collect()
 
-matrix_of_cos = np.ones(shape = (10381, 10381), dtype = float)
+# matrix_of_cos = np.ones(shape = (10381, 10381), dtype = float)
+#
+# for i in range(10381):
+#     for j in range(i + 1, 10381):
+#         matrix_of_cos[i, j] = \
+#             np.dot(a = processed_data[i, :], b = processed_data[j, :]) / (length_of_vector[i] * length_of_vector[j])
+# # has sklearn.metrics.pairwise.cosine_similarity does the exact same thing. Still implement due to lack of research
+#         matrix_of_cos[j, i] = matrix_of_cos[i, j]
+#
+# print('Time compute: {}'.format(time.time() - time1))
 
-for i in range(10381):
-    for j in range(i + 1, 10381):
-        matrix_of_cos[i, j] = \
-            np.dot(a = processed_data[i, :], b = processed_data[j, :]) / (length_of_vector[i] * length_of_vector[j])
-        matrix_of_cos[j, i] = matrix_of_cos[i, j]
+from sklearn.metrics.pairwise import cosine_similarity
+time2 = time.time()
+matrix_of_cos = cosine_similarity(X = processed_data, dense_output = True)
+print('Time compute: {} seconds'.format(time.time() - time2))
 
 # func to recommend the item based solely on genome-tag
 # input: n: Id of the item you have (could be str or int)
