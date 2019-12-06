@@ -152,12 +152,104 @@ import pandas as pd
 import numpy as np
 import gc
 
-itemDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/movies.csv', sep = ',')
-# exercise/recommendationSystem/ml-20m/movies.csv
-ratingDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/ratings.csv', sep = ',')
-# exercise/recommendationSystem/ml-20m/ratings.csv
-tagScoreDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/processed_genome_score.csv', sep = ',')
-# exercise/recommendationSystem/ml-20m/processed_genome_score.csv
-# tmpDataset just to keep tab of the content of each tag. If weak machine, can delete this for memory purpose
-tmpDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/genome-tags.csv', sep = ',')
-# exercise/recommendationSystem/ml-20m/genome-tags.csv
+from sklearn.model_selection import train_test_split
+
+try:
+    itemDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/processed_movies.csv', sep = ',')
+except FileNotFoundError:
+    itemDataset = pd.read_csv(filepath_or_buffer='ml-20m/movies.csv', sep=',')
+    print('Pre-processing item dataset.')
+    itemDataset['Action'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Adventure'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Animation'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Children'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Comedy'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Crime'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Documentary'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Drama'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Fantasy'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Film-Noir'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Horror'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Musical'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Mystery'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Romance'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Sci-Fi'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Thriller'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['War'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['Western'] = np.zeros((itemDataset.shape[0], 1))
+    itemDataset['No-genre'] = np.zeros((itemDataset.shape[0], 1))
+
+    genres = ['Action', 'Adventure', 'Animation', 'Children', 'Comedy', 'Crime', 'Documentary', 'Drama', 'Fantasy'
+        , 'Film-Noir', 'Horror', 'Musical', 'Mystery', 'Romance', 'Sci-Fi', 'Thriller', 'War', 'Western']
+
+    for i in range(itemDataset.shape[0]):
+        itemGenres = itemDataset.iloc[i, :].genres.split('|')
+        for itemGenre in itemGenres:
+            if itemGenre in genres:
+                itemDataset.iloc[i, 3 + genres.index(itemGenre)] = 1
+            else:
+                itemDataset.iloc[i, 21] = 1
+
+    to_new_dataset = list(range(22))
+    to_new_dataset.remove(2)
+    itemDataset = itemDataset.iloc[:, to_new_dataset]
+
+    print('If cannot find ml-20m/processed_movies.csv, uncomment, run once and comment again.')
+    itemDataset.to_csv('ml-20m/processed_movies.csv', index = False)
+finally:
+    ratingDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/ratings.csv', sep = ',')
+    tagScoreDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/processed_genome_score.csv', sep = ',')
+    tmpDataset = pd.read_csv(filepath_or_buffer = 'ml-20m/genome-tags.csv', sep = ',')
+    to_obtain_tag_data = list(range(1, tagScoreDataset.shape[1]))
+    tagScoreDataset = tagScoreDataset.iloc[:, to_obtain_tag_data]
+
+
+itemInfor = itemDataset.iloc[:, :].values
+mapping = ratingDataset.iloc[:, [0, 1, 2]].values
+mapping_train, mapping_test = train_test_split(mapping, test_size = 0.2, random_state = 0)
+print('User will be collected rating dataset with no features due to new user data sharing thus may not be enough')
+users = ratingDataset['userId'].unique().tolist()
+
+# build lightfm dataset
+from lightfm import data
+dataset = data.Dataset()
+
+dataset.fit(users = users, items = (itemInfor[:, 0]), item_features = (itemInfor[:, 1]))
+dataset.fit_partial(item_features = itemInfor[:, 2])
+dataset.fit_partial(item_features = itemInfor[:, 3])
+dataset.fit_partial(item_features = itemInfor[:, 4])
+dataset.fit_partial(item_features = itemInfor[:, 6])
+dataset.fit_partial(item_features = itemInfor[:, 7])
+dataset.fit_partial(item_features = itemInfor[:, 8])
+dataset.fit_partial(item_features = itemInfor[:, 9])
+dataset.fit_partial(item_features = itemInfor[:, 10])
+dataset.fit_partial(item_features = itemInfor[:, 11])
+dataset.fit_partial(item_features = itemInfor[:, 12])
+dataset.fit_partial(item_features = itemInfor[:, 13])
+dataset.fit_partial(item_features = itemInfor[:, 14])
+dataset.fit_partial(item_features = itemInfor[:, 15])
+dataset.fit_partial(item_features = itemInfor[:, 16])
+dataset.fit_partial(item_features = itemInfor[:, 17])
+dataset.fit_partial(item_features = itemInfor[:, 18])
+dataset.fit_partial(item_features = itemInfor[:, 19])
+dataset.fit_partial(item_features = itemInfor[:, 20])
+
+# build feature
+itemFeatures = dataset.build_item_features(((item[0], [item[1], item[2], item[3], item[4], item[8], item[6], item[7]
+    , item[8], item[9], item[10], item[11], item[12], item[13], item[14], item[15], item[16], item[17]
+    , item[18], item[19], item[20]]) for item in itemInfor), normalize = False)
+
+# build interaction
+mappingFeatures = dataset.build_interactions(((mappingi[0], mappingi[1], mappingi[2]) for mappingi in mapping))
+mappingFeatures_train = dataset.build_interactions(((mappingi[0], mappingi[1], mappingi[2])
+                                                    for mappingi in mapping_train))
+mappingFeatures_test = dataset.build_interactions(((mappingi[0], mappingi[1], mappingi[2])
+                                                   for mappingi in mapping_test))
+
+from lightfm import LightFM
+model = LightFM(learning_schedule = 'adagrad', loss='bpr')
+model.fit(mappingFeatures_train[0], item_features = itemFeatures, sample_weight = mappingFeatures_train[1]
+          , epochs = 30, num_threads = 2, verbose = True)
+
+y_pred = model.predict_rank(test_interactions = mappingFeatures_test[0], item_features = itemFeatures)
+# too large
