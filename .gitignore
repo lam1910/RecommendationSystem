@@ -41,9 +41,16 @@ Thumbs.db
 *.png
 *.jpeg
 
+#Data Folder#
+#############
 /20191113_Khachhang_Product_Beemart/
 /ml-100k/
 /ml-20m/
 /movielens_item_Annoy_idx.ann
 /example_data/
 /ml-1m/
+
+#Temp Folder#
+#############
+**/__pycache__/
+**/.idea/
